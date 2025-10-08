@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -10,6 +11,9 @@ import {
   Pagination,
 } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+
+// Import API services
+import { vehicleHistoryAPI } from '../services/apiiiService';
 
 export default function VehicleHistoryUI() {
   const [vehicles, setVehicles] = useState([]);
@@ -25,30 +29,30 @@ export default function VehicleHistoryUI() {
     fetchVehicles();
   }, []);
 
+  // Fetch list of vehicles using API service
   const fetchVehicles = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://192.168.68.135:8088/api/vehicleHistory");
-      const data = await res.json();
+      const data = await vehicleHistoryAPI.getAllVehicleHistory();
       setVehicles(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
+      setVehicles([]); // fallback empty array
     } finally {
       setLoading(false);
     }
   };
 
+  // Fetch single vehicle details using API service
   const fetchVehicleDetail = async (id) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `http://192.168.68.135:8088/api/vehicleHistory/${id}`
-      );
-      const data = await res.json();
+      const data = await vehicleHistoryAPI.getVehicleHistoryById(id);
       setSelectedVehicle(data);
       setShowModal(true);
     } catch (error) {
       console.error("Error fetching vehicle detail:", error);
+      setSelectedVehicle(null); // fallback on error
     } finally {
       setLoading(false);
     }
@@ -60,21 +64,51 @@ export default function VehicleHistoryUI() {
   const currentItems = vehicles.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(vehicles.length / itemsPerPage);
 
-  // Table headers
-  const tableHeaders =
-    vehicles.length > 0
-      ? Object.keys(vehicles[0]).filter((key) => key !== "id" && key !== "_id")
-      : [];
-
   // Human-friendly labels
   const headerLabels = {
     clientId: "Client ID",
     vehicleNum: "Vehicle Number",
     weekEnding: "Week Ending Date",
     totDistanceUsed: "Total Distance (km)",
-    totSocDropUsed: "Battery Used ",
+    totSocDropUsed: "Battery Used",
     numTripsUsed: "Number of Trips",
     range: "Estimated Range (km)",
+  };
+
+  // Table headers
+  const tableHeaders =
+    vehicles.length > 0
+      ? Object.keys(vehicles[0]).filter((key) => key !== "id" && key !== "_id")
+      : [];
+
+  // Format date to human-readable
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  // Format numbers with proper units
+  const formatNumber = (value, unit = "") => {
+    if (value === null || value === undefined) return "N/A";
+    const numValue = typeof value === 'number' ? value : parseFloat(value);
+    if (isNaN(numValue)) return value;
+    
+    if (unit === "km") {
+      return `${numValue.toFixed(2)} km`;
+    } else if (unit === "") {
+      return `${numValue.toFixed(1)}`;
+    } else {
+      return numValue.toString();
+    }
   };
 
   return (
@@ -92,8 +126,20 @@ export default function VehicleHistoryUI() {
             🚘 Vehicle History
           </h3>
 
-          {loading && (
-            <Spinner animation="border" variant="light" className="d-block mx-auto" />
+          {loading && vehicles.length === 0 && (
+            <div className="text-center">
+              <Spinner animation="border" variant="light" className="mb-3" />
+              <p>Loading vehicle history data...</p>
+            </div>
+          )}
+
+          {!loading && vehicles.length === 0 && (
+            <div className="text-center p-4">
+              <p className="text-warning">No vehicle history data available</p>
+              <Button variant="outline-info" onClick={fetchVehicles}>
+                🔄 Retry
+              </Button>
+            </div>
           )}
 
           {!loading && vehicles.length > 0 && (
@@ -108,7 +154,9 @@ export default function VehicleHistoryUI() {
                 <thead>
                   <tr>
                     {tableHeaders.map((key, index) => (
-                      <th key={index}>{headerLabels[key] || key}</th>
+                      <th key={index} className="text-center">
+                        {headerLabels[key] || key}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -118,12 +166,21 @@ export default function VehicleHistoryUI() {
                       key={rowIndex}
                       onClick={() => fetchVehicleDetail(row.id || row._id)}
                       style={{ cursor: "pointer" }}
+                      className="hover-row"
                     >
                       {tableHeaders.map((key, colIndex) => (
-                        <td key={colIndex}>
-                          {typeof row[key] === "object"
+                        <td key={colIndex} className="text-center">
+                          {key === "weekEnding"
+                            ? formatDate(row[key])
+                            : key === "totDistanceUsed"
+                            ? formatNumber(row[key], "km")
+                            : key === "totSocDropUsed"
+                            ? formatNumber(row[key], "")
+                            : key === "range"
+                            ? formatNumber(row[key], "km")
+                            : typeof row[key] === "object"
                             ? JSON.stringify(row[key])
-                            : row[key]?.toString()}
+                            : row[key]?.toString() || "N/A"}
                         </td>
                       ))}
                     </tr>
@@ -137,6 +194,11 @@ export default function VehicleHistoryUI() {
           {vehicles.length > itemsPerPage && (
             <div className="d-flex justify-content-center mt-3">
               <Pagination className="futuristic-pagination">
+                <Pagination.Prev 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                />
+                
                 {[...Array(totalPages)].map((_, index) => (
                   <Pagination.Item
                     key={index + 1}
@@ -146,7 +208,21 @@ export default function VehicleHistoryUI() {
                     {index + 1}
                   </Pagination.Item>
                 ))}
+                
+                <Pagination.Next 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                />
               </Pagination>
+            </div>
+          )}
+
+          {/* Show current page info */}
+          {vehicles.length > 0 && (
+            <div className="text-center mt-2 text-muted">
+              <small>
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, vehicles.length)} of {vehicles.length} records
+              </small>
             </div>
           )}
         </Col>
@@ -158,13 +234,19 @@ export default function VehicleHistoryUI() {
         onHide={() => setShowModal(false)}
         size="lg"
         centered
+        scrollable
         className="futuristic-modal"
       >
         <Modal.Header closeButton className="glass-header">
-          <Modal.Title className="text-white">Vehicle Detail</Modal.Title>
+          <Modal.Title className="text-white">📊 Vehicle History Details</Modal.Title>
         </Modal.Header>
         <Modal.Body className="glass-body text-white">
-          {selectedVehicle ? (
+          {loading ? (
+            <div className="text-center">
+              <Spinner animation="border" variant="primary" />
+              <p className="mt-2">Loading details...</p>
+            </div>
+          ) : selectedVehicle ? (
             <Table
               striped
               bordered
@@ -183,23 +265,36 @@ export default function VehicleHistoryUI() {
                   .filter((key) => key !== "id" && key !== "_id")
                   .map((key, index) => (
                     <tr key={index}>
-                      <td>{headerLabels[key] || key}</td>
+                      <td className="fw-bold">{headerLabels[key] || key}</td>
                       <td>
-                        {typeof selectedVehicle[key] === "object"
+                        {key === "weekEnding"
+                          ? formatDate(selectedVehicle[key])
+                          : key === "totDistanceUsed"
+                          ? formatNumber(selectedVehicle[key], "km")
+                          : key === "totSocDropUsed"
+                          ? formatNumber(selectedVehicle[key], "")
+                          : key === "range"
+                          ? formatNumber(selectedVehicle[key], "km")
+                          : typeof selectedVehicle[key] === "object"
                           ? JSON.stringify(selectedVehicle[key])
-                          : selectedVehicle[key]?.toString()}
+                          : selectedVehicle[key]?.toString() || "N/A"}
                       </td>
                     </tr>
                   ))}
               </tbody>
             </Table>
           ) : (
-            <p>No details available</p>
+            <div className="text-center text-muted">
+              <p>No details available for this vehicle</p>
+            </div>
           )}
         </Modal.Body>
         <Modal.Footer className="glass-footer">
           <Button variant="outline-light" onClick={() => setShowModal(false)}>
             Close
+          </Button>
+          <Button variant="info" onClick={fetchVehicles}>
+            Refresh Data
           </Button>
         </Modal.Footer>
       </Modal>
@@ -230,10 +325,11 @@ export default function VehicleHistoryUI() {
         .futuristic-table tbody {
           color: #e0e0e0;
         }
-        .futuristic-table tbody tr:hover {
+        .hover-row:hover {
           background: rgba(0, 255, 255, 0.1);
           color: #00eaff;
           transition: 0.3s;
+          transform: scale(1.01);
         }
         .futuristic-pagination .page-item.active .page-link {
           background-color: cyan;
@@ -265,6 +361,27 @@ export default function VehicleHistoryUI() {
           color: #e0e0e0;
         }
       `}</style>
+
+      {/* Inline CSS for better compatibility */}
+      <style>{`
+        .hover-row:hover {
+          background: rgba(0, 255, 255, 0.1) !important;
+          color: #00eaff !important;
+          transition: all 0.3s ease !important;
+          transform: scale(1.01) !important;
+        }
+        .futuristic-table {
+          font-size: 0.9rem;
+        }
+        .modal-content {
+          font-size: 0.9rem;
+        }
+        .page-link {
+          font-size: 0.85rem;
+        }
+      `}</style>
+
+      
     </Container>
   );
 }

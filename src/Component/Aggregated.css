@@ -1,0 +1,140 @@
+/* Integreated.css */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --purple-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --blue-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  /* --teal-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); */
+  --orange-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.futuristic-bg {
+  background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ... (keep all the existing CSS styles from previous version) ... */
+
+/* Ensure all text is white in specific components */
+.card-subtitle.text-white,
+.card-title.text-white,
+.metric-value.text-white,
+.metric-label.text-white,
+.metric-badge.text-white,
+.futuristic-chart-title.text-white,
+.legend-item span.text-white,
+.table-header.text-white,
+.date-cell strong.text-white,
+.value-badge.text-white,
+.performance-badge.text-white,
+.trend-indicator span.text-white,
+.futuristic-footer small.text-white {
+  color: #ffffff !important;
+}
+
+/* Icon colors */
+.metric-icon.text-white,
+.trend-icon.text-white,
+.header-icon .text-white {
+  color: #ffffff !important;
+}
+
+/* Badge styles */
+.performance-high,
+.performance-medium,
+.performance-low {
+  color: #ffffff !important;
+}
+
+.trend-up,
+.trend-down,
+.trend-neutral {
+  color: #ffffff !important;
+}
+
+/* Table row text colors */
+.table-row td {
+  color: #ffffff !important;
+}
+
+/* Ensure all text in cards is white */
+.futuristic-card,
+.futuristic-metric-card,
+.futuristic-chart-card,
+.futuristic-table-card {
+  color: #ffffff !important;
+}
+
+.futuristic-card *,
+.futuristic-metric-card *,
+.futuristic-chart-card *,
+.futuristic-table-card * {
+  color: #ffffff !important;
+}
+
+/* Custom tooltip text */
+.custom-tooltip,
+.tooltip-label,
+.tooltip-item {
+  color: #ffffff !important;
+}
+
+/* Header text */
+.futuristic-title {
+  background: linear-gradient(45deg, #fff, #e0e0e0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+.futuristic-header p,
+.futuristic-header small {
+  color: #ffffff !important;
+}
+
+/* 🔷 Chart Enhancement */
+.futuristic-line-container {
+  transition: height 0.4s ease, width 0.4s ease;
+  animation: glowPulse 4s infinite ease-in-out;
+}
+
+/* Smooth pulsing effect */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 180, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(0, 180, 255, 0.4);
+  }
+}
+
+/* Futuristic text */
+.futuristic-text h5,
+.futuristic-text p {
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+/* Futuristic card styling */
+.futuristic-chart-card,
+.futuristic-table-card {
+  border-radius: 16px;
+  transition: transform 0.3s ease;
+}
+
+.futuristic-chart-card:hover,
+.futuristic-table-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(0, 200, 255, 0.25);
+}
+
+/* Make table smoother */
+.table-dark tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  transform: scale(1.01);
+  transition: all 0.2s ease-in-out;
+}

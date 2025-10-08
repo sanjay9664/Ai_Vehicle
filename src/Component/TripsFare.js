@@ -8,8 +8,13 @@ import {
   Modal,
   Button,
   Pagination,
+  Alert,
+  Badge,
 } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+
+// Import API services
+import { theftDetectionAPI } from '../services/apiiService';
 
 export default function VehicleHistoryUI() {
   const [vehicles, setVehicles] = useState([]);
@@ -25,32 +30,30 @@ export default function VehicleHistoryUI() {
     fetchVehicles();
   }, []);
 
-  // Fetch list of vehicles
+  // Fetch list of vehicles using API service
   const fetchVehicles = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://192.168.68.135:8088/api/theftdetection");
-      const data = await res.json();
+      const data = await theftDetectionAPI.getAllTheftRecords();
       setVehicles(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
+      setVehicles([]); // fallback empty array
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch single vehicle details
+  // Fetch single vehicle details using API service
   const fetchVehicleDetail = async (id) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `http://192.168.68.135:8088/api/theftdetection/${id}`
-      );
-      const data = await res.json();
+      const data = await theftDetectionAPI.getTheftRecordById(id);
       setSelectedVehicle(data);
       setShowModal(true);
     } catch (error) {
       console.error("Error fetching vehicle detail:", error);
+      setSelectedVehicle(null); // fallback on error
     } finally {
       setLoading(false);
     }
@@ -88,23 +91,61 @@ export default function VehicleHistoryUI() {
     return date.toLocaleString(); // e.g., "25/09/2025, 16:30:00"
   };
 
+  // Check if theft is detected
+  const isTheftDetected = (vehicle) => {
+    const indicator = vehicle?.theftIndicator;
+    return indicator === true || indicator === "true" || indicator === "YES";
+  };
+
+  // Format theft indicator with emoji and badge
+  const formatTheftIndicator = (indicator) => {
+    if (isTheftDetected({ theftIndicator: indicator })) {
+      return <Badge bg="danger" className="p-2">🔴 YES</Badge>;
+    } else {
+      return <Badge bg="success" className="p-2">🟢 NO</Badge>;
+    }
+  };
+
+  // Get theft status message
+  const getTheftStatusMessage = (vehicle) => {
+    if (isTheftDetected(vehicle)) {
+      return "🚨 Theft Detected. Please take necessary action";
+    } else {
+      return "✅ All OK. Vehicle is safe";
+    }
+  };
+
   return (
     <Container fluid className="mt-4 p-4 bg-dark text-light rounded">
       <Row>
         <Col>
-          <h3 className="mb-4 text-center text-info">🤖THEFTDETECTION</h3>
+          <h3 className="mb-4 text-center text-info">🤖 THEFT DETECTION</h3>
 
-          {loading && (
-            <Spinner animation="border" variant="light" className="d-block mx-auto" />
+          {loading && vehicles.length === 0 && (
+            <div className="text-center">
+              <Spinner animation="border" variant="light" className="mb-2" />
+              <p>Loading vehicle data...</p>
+            </div>
+          )}
+
+          {!loading && vehicles.length === 0 && (
+            <div className="text-center p-4">
+              <p className="text-warning">No vehicle data available</p>
+              <Button variant="outline-info" onClick={fetchVehicles}>
+                🔄 Retry
+              </Button>
+            </div>
           )}
 
           {!loading && vehicles.length > 0 && (
-            <div className="p-3 bg-secondary bg-opacity-25 rounded text-center">
-              <Table striped bordered hover responsive variant="dark">
+            <div className="p-3 bg-secondary bg-opacity-25 rounded">
+              <Table striped bordered hover responsive variant="dark" size="sm">
                 <thead>
                   <tr>
                     {tableHeaders.map((key, index) => (
-                      <th key={index}>{headerLabels[key] || key}</th>
+                      <th key={index} className="text-center">
+                        {headerLabels[key] || key}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -114,14 +155,17 @@ export default function VehicleHistoryUI() {
                       key={rowIndex}
                       onClick={() => fetchVehicleDetail(row.id || row._id)}
                       style={{ cursor: "pointer" }}
+                      className={`hover-row ${isTheftDetected(row) ? 'theft-detected-row' : ''}`}
                     >
                       {tableHeaders.map((key, colIndex) => (
-                        <td key={colIndex}>
+                        <td key={colIndex} className="text-center">
                           {key === "timestamp"
                             ? formatTimestamp(row[key])
+                            : key === "theftIndicator"
+                            ? formatTheftIndicator(row[key])
                             : typeof row[key] === "object"
                             ? JSON.stringify(row[key])
-                            : row[key]?.toString()}
+                            : row[key]?.toString() || "N/A"}
                         </td>
                       ))}
                     </tr>
@@ -135,6 +179,11 @@ export default function VehicleHistoryUI() {
           {vehicles.length > itemsPerPage && (
             <div className="d-flex justify-content-center mt-3">
               <Pagination>
+                <Pagination.Prev 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                />
+                
                 {[...Array(totalPages)].map((_, index) => (
                   <Pagination.Item
                     key={index + 1}
@@ -144,7 +193,21 @@ export default function VehicleHistoryUI() {
                     {index + 1}
                   </Pagination.Item>
                 ))}
+                
+                <Pagination.Next 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                />
               </Pagination>
+            </div>
+          )}
+
+          {/* Show current page info */}
+          {vehicles.length > 0 && (
+            <div className="text-center mt-2 text-muted">
+              <small>
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, vehicles.length)} of {vehicles.length} records
+              </small>
             </div>
           )}
         </Col>
@@ -156,49 +219,144 @@ export default function VehicleHistoryUI() {
         onHide={() => setShowModal(false)}
         size="lg"
         centered
+        scrollable
+        className="theft-detection-modal"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Vehicle Detail</Modal.Title>
+        <Modal.Header closeButton className={`${selectedVehicle && isTheftDetected(selectedVehicle) ? 'bg-danger text-white' : 'bg-success text-white'}`}>
+          <Modal.Title>
+            🚗 Vehicle Details
+            {selectedVehicle && (
+              <Badge bg={isTheftDetected(selectedVehicle) ? "light" : "dark"} className="ms-2">
+                {isTheftDetected(selectedVehicle) ? "🚨 ALERT" : "✅ SAFE"}
+              </Badge>
+            )}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {selectedVehicle ? (
-            <Table striped bordered hover responsive>
-              <thead>
-                <tr>
-                  <th>Field</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.keys(selectedVehicle)
-                  .filter((key) => key !== "id" && key !== "_id")
-                  .map((key, index) => (
-                    <tr key={index}>
-                      <td>{headerLabels[key] || key}</td>
-                      <td>
-                        {key === "timestamp"
-                          ? formatTimestamp(selectedVehicle[key])
-                          : typeof selectedVehicle[key] === "object"
-                          ? JSON.stringify(selectedVehicle[key])
-                          : selectedVehicle[key]?.toString()}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </Table>
+          {loading ? (
+            <div className="text-center">
+              <Spinner animation="border" variant="primary" />
+              <p className="mt-2">Loading details...</p>
+            </div>
+          ) : selectedVehicle ? (
+            <>
+              {/* Theft Alert Message */}
+              <Alert variant={isTheftDetected(selectedVehicle) ? "danger" : "success"} className="mb-3">
+                <Alert.Heading className="d-flex align-items-center">
+                  {isTheftDetected(selectedVehicle) ? "🚨 Theft Alert" : "✅ Vehicle Status"}
+                </Alert.Heading>
+                <p className="mb-0 fw-bold">
+                  {getTheftStatusMessage(selectedVehicle)}
+                </p>
+                {isTheftDetected(selectedVehicle) && (
+                  <>
+                    <hr />
+                    <div className="d-flex gap-2 flex-wrap">
+                      <Button variant="outline-danger" size="sm">
+                        🚔 Contact Security
+                      </Button>
+                      <Button variant="outline-warning" size="sm">
+                        📱 Notify Owner
+                      </Button>
+                      <Button variant="outline-info" size="sm">
+                        📍 Track Vehicle
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </Alert>
+
+              {/* Vehicle Details Table */}
+              <Table striped bordered hover responsive>
+                <thead>
+                  <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(selectedVehicle)
+                    .filter((key) => key !== "id" && key !== "_id")
+                    .map((key, index) => (
+                      <tr key={index} className={key === "theftIndicator" && isTheftDetected(selectedVehicle) ? "table-danger" : ""}>
+                        <td className="fw-bold">{headerLabels[key] || key}</td>
+                        <td>
+                          {key === "timestamp"
+                            ? formatTimestamp(selectedVehicle[key])
+                            : key === "theftIndicator"
+                            ? formatTheftIndicator(selectedVehicle[key])
+                            : typeof selectedVehicle[key] === "object"
+                            ? JSON.stringify(selectedVehicle[key])
+                            : selectedVehicle[key]?.toString() || "N/A"}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </Table>
+
+              {/* Additional Information for Theft Cases */}
+              {isTheftDetected(selectedVehicle) && (
+                <div className="mt-3 p-3 bg-light text-dark rounded">
+                  <h6 className="text-danger fw-bold">⚠️ Immediate Actions Required:</h6>
+                  <ul className="small mb-0 text-dark">
+                    <li className="text-dark">Contact local authorities with vehicle information</li>
+                    <li className="text-dark">Notify the registered vehicle owner immediately</li>
+                    <li className="text-dark">Check recent GPS location and movement history</li>
+                    <li className="text-dark">Review access logs and authentication records</li>
+                    <li className="text-dark">Initiate vehicle immobilization procedure if available</li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Safe Vehicle Information */}
+              {!isTheftDetected(selectedVehicle) && (
+                <div className="mt-3 p-3 bg-light text-dark rounded">
+                  <h6 className="text-success fw-bold">ℹ️ Vehicle Status Information:</h6>
+                  <ul className="small mb-0 text-dark">
+                    <li className="text-dark">Vehicle is operating normally</li>
+                    <li className="text-dark">No suspicious activity detected</li>
+                    <li className="text-dark">All systems are functioning properly</li>
+                    <li className="text-dark">Regular monitoring is active</li>
+                  </ul>
+                </div>
+              )}
+            </>
           ) : (
-            <p>No details available</p>
+            <div className="text-center text-muted">
+              <p>No details available for this vehicle</p>
+            </div>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+        <Modal.Footer className={selectedVehicle && isTheftDetected(selectedVehicle) ? 'bg-danger text-white' : 'bg-success text-white'}>
+          <Button variant="outline-light" onClick={() => setShowModal(false)}>
             Close
+          </Button>
+          {selectedVehicle && isTheftDetected(selectedVehicle) && (
+            <Button variant="light" className="text-danger fw-bold">
+              🚨 Emergency Protocol
+            </Button>
+          )}
+          <Button variant="outline-light" onClick={fetchVehicles}>
+            Refresh Data
           </Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Custom font size for table, modal, pagination */}
+      {/* Custom Styles */}
       <style jsx>{`
+        .hover-row:hover {
+          background-color: rgba(255, 255, 255, 0.1) !important;
+          transform: scale(1.01);
+          transition: all 0.2s ease;
+        }
+        .theft-detected-row {
+          background-color: rgba(255, 0, 0, 0.1) !important;
+          border-left: 3px solid #dc3545;
+        }
+        .theft-detected-row:hover {
+          background-color: rgba(255, 0, 0, 0.2) !important;
+          border-left: 3px solid #ff0000;
+        }
         table {
           font-size: 0.85rem;
         }
@@ -207,6 +365,48 @@ export default function VehicleHistoryUI() {
         }
         .pagination .page-link {
           font-size: 0.85rem;
+        }
+        .text-dark {
+          color: #000000 !important;
+        }
+      `}</style>
+
+      {/* Inline CSS for better compatibility */}
+      <style>{`
+        .hover-row:hover {
+          background-color: rgba(255, 255, 255, 0.1) !important;
+          transform: scale(1.01);
+          transition: all 0.2s ease;
+        }
+        .theft-detected-row {
+          background-color: rgba(255, 0, 0, 0.1) !important;
+          border-left: 3px solid #dc3545 !important;
+        }
+        .theft-detected-row:hover {
+          background-color: rgba(255, 0, 0, 0.2) !important;
+          border-left: 3px solid #ff0000 !important;
+        }
+        .table-dark {
+          font-size: 0.85rem;
+        }
+        .modal-content {
+          font-size: 0.9rem;
+        }
+        .page-link {
+          font-size: 0.85rem;
+        }
+        .badge {
+          font-size: 0.75rem;
+          color: black;
+        }
+        .text-dark {
+          color: #000000 !important;
+        }
+        .bg-light .text-dark {
+          color: #000000 !important;
+        }
+        .bg-light li {
+          color: #000000 !important;
         }
       `}</style>
     </Container>

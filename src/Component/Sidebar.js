@@ -2,19 +2,23 @@ import React from 'react';
 import { 
   FaTachometerAlt, 
   FaCar,
-  FaExclamationTriangle  
-  // FaRoute, 
+  FaExclamationTriangle  ,
+  FaMotorcycle  , 
+  FaSearchLocation
   // FaBatteryHalf, 
   // FaMapMarkerAlt, 
   // FaCog,
   
 } from 'react-icons/fa';
-
+import { FaLayerGroup, FaThLarge, FaBoxes, FaStream } from 'react-icons/fa';
 const Sidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
   const menuItems = [
     { id: 'Trip Details', name: 'Trip Details', icon: <FaTachometerAlt /> },
+    { id: 'Aggregated', name: 'Aggregated', icon: <FaLayerGroup    />  }, 
+    { id: 'Individual_Dashboard', name: 'Individual_Dashboard', icon: <FaSearchLocation    />  }, 
     { id: 'Vehicle History', name: 'Vehicle History', icon: <FaCar /> },
     { id: 'Theftdetection', name: 'Theftdetection', icon: <FaExclamationTriangle  /> }, 
+    { id: 'RiderDetails', name: 'RiderDetails', icon: <FaMotorcycle    />  }, 
    
   ];
 
