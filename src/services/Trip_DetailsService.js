@@ -1,14 +1,14 @@
-// src/services/apiService.js
-
-import { API_ENDPOINTS, OSM_ENDPOINTS } from '../config/apiConfigg';
+import { API_ENDPOINTS, OSM_ENDPOINTS, API_BASE_URL } from '../config/Trip_DetailsConfig';
 
 const defaultHeaders = {
   'ngrok-skip-browser-warning': 'true',
   'Content-Type': 'application/json',
 };
 
-// Common fetch function with error handling
+// Common fetch function with enhanced error handling and logging
 const fetchWithErrorHandling = async (url, options = {}) => {
+  console.log(`🔄 API Call: ${url}`);
+  
   try {
     const response = await fetch(url, {
       ...options,
@@ -18,12 +18,11 @@ const fetchWithErrorHandling = async (url, options = {}) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
+    
     const responseText = await response.text();
     
-    // Handle empty response
     if (!responseText) {
-      throw new Error('Empty response from server');
+      throw new Error('Empty response from server ');
     }
 
     let data;
@@ -34,9 +33,10 @@ const fetchWithErrorHandling = async (url, options = {}) => {
       throw new Error('Invalid JSON response from API');
     }
 
+    console.log(`✅ API Success: ${url}`);
     return data;
   } catch (error) {
-    console.error(`API call failed for ${url}:`, error);
+    console.error(`❌ API Failed: ${url}`, error);
     throw error;
   }
 };
@@ -45,6 +45,7 @@ const fetchWithErrorHandling = async (url, options = {}) => {
 export const vehiclesAPI = {
   // Get all vehicles
   getAllVehicles: async () => {
+    console.log("🚗 Fetching vehicles from:", API_ENDPOINTS.VEHICLES.BASE);
     return await fetchWithErrorHandling(API_ENDPOINTS.VEHICLES.BASE);
   },
 
@@ -58,6 +59,7 @@ export const vehiclesAPI = {
     const toLon = routeCoordinates?.to?.[1] || DEFAULT_COORDINATES.TO_LON;
 
     const url = API_ENDPOINTS.VEHICLES.LATEST(vehicleId, fromLat, fromLon, toLat, toLon);
+    console.log(`📊 Fetching latest data for vehicle ${vehicleId}`);
     return await fetchWithErrorHandling(url);
   },
 
@@ -73,48 +75,7 @@ export const vehiclesAPI = {
       battery || 100
     );
     
-    return await fetchWithErrorHandling(url);
-  }
-};
-
-// Theft Detection API calls
-export const theftDetectionAPI = {
-  // Get all theft detection records
-  getAllTheftRecords: async () => {
-    return await fetchWithErrorHandling(API_ENDPOINTS.THEFT_DETECTION.BASE);
-  },
-
-  // Get theft detection record by ID
-  getTheftRecordById: async (id) => {
-    const url = API_ENDPOINTS.THEFT_DETECTION.BY_ID(id);
-    return await fetchWithErrorHandling(url);
-  }
-};
-
-// Vehicle History API calls
-export const vehicleHistoryAPI = {
-  // Get all vehicle history records
-  getAllVehicleHistory: async () => {
-    return await fetchWithErrorHandling(API_ENDPOINTS.VEHICLE_HISTORY.BASE);
-  },
-
-  // Get vehicle history record by ID
-  getVehicleHistoryById: async (id) => {
-    const url = API_ENDPOINTS.VEHICLE_HISTORY.BY_ID(id);
-    return await fetchWithErrorHandling(url);
-  }
-};
-
-// Rider Score API calls
-export const riderScoreAPI = {
-  // Get all rider score records
-  getAllRiderScores: async () => {
-    return await fetchWithErrorHandling(API_ENDPOINTS.RIDER_SCORE.BASE);
-  },
-
-  // Get rider score record by ID
-  getRiderScoreById: async (id) => {
-    const url = API_ENDPOINTS.RIDER_SCORE.BY_ID(id);
+    console.log(`🔮 Getting prediction for vehicle ${vehicleId}`);
     return await fetchWithErrorHandling(url);
   }
 };
@@ -127,6 +88,7 @@ export const osmAPI = {
     
     try {
       const url = OSM_ENDPOINTS.SEARCH(query);
+      console.log(`🗺️ OSM Search: ${query}`);
       const response = await fetch(url, { mode: "cors" });
       const data = await response.json();
       return data;
@@ -149,6 +111,20 @@ export const osmAPI = {
       console.error('Geocoding Error:', error);
       return null;
     }
+  }
+};
+
+// Server status check
+export const checkServerStatus = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/health`, {
+      method: 'GET',
+      headers: defaultHeaders
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Server status check failed:', error);
+    return false;
   }
 };
 

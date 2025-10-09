@@ -1,6 +1,6 @@
 // src/services/apiService.js
 
-import { API_ENDPOINTS, OSM_ENDPOINTS } from '../config/apiConfigDetault';
+import { API_ENDPOINTS, OSM_ENDPOINTS } from '../config/VehicleInfoConfig';
 
 const defaultHeaders = {
   'ngrok-skip-browser-warning': 'true',
@@ -102,42 +102,6 @@ export const vehicleHistoryAPI = {
   getVehicleHistoryById: async (id) => {
     const url = API_ENDPOINTS.VEHICLE_HISTORY.BY_ID(id);
     return await fetchWithErrorHandling(url);
-  }
-};
-
-// Rider Score API calls
-export const riderScoreAPI = {
-  // Get all rider score records
-  getAllRiderScores: async () => {
-    return await fetchWithErrorHandling(API_ENDPOINTS.RIDER_SCORE.BASE);
-  },
-
-  // Get rider score record by ID
-  getRiderScoreById: async (id) => {
-    const url = API_ENDPOINTS.RIDER_SCORE.BY_ID(id);
-    return await fetchWithErrorHandling(url);
-  }
-};
-
-// Odometer API calls
-export const odometerAPI = {
-  // Get odometer data
-  getOdometerData: async (vehicleId, strict = true) => {
-    const url = API_ENDPOINTS.ODOMETER.BASE(strict, vehicleId);
-    return await fetchWithErrorHandling(url);
-  },
-
-  // Get both strict and non-strict data
-  getOdometerDataBothModes: async (vehicleId) => {
-    const [strictData, nonStrictData] = await Promise.all([
-      odometerAPI.getOdometerData(vehicleId, true),
-      odometerAPI.getOdometerData(vehicleId, false)
-    ]);
-    
-    return {
-      strict: strictData,
-      nonStrict: nonStrictData
-    };
   }
 };
 

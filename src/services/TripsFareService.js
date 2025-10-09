@@ -1,6 +1,6 @@
 // src/services/apiService.js
 
-import { API_ENDPOINTS, OSM_ENDPOINTS } from '../config/apiiiConfig';
+import { API_ENDPOINTS, OSM_ENDPOINTS } from '../config/TripsFareConfig';
 
 const defaultHeaders = {
   'ngrok-skip-browser-warning': 'true',
@@ -87,20 +87,6 @@ export const theftDetectionAPI = {
   // Get theft detection record by ID
   getTheftRecordById: async (id) => {
     const url = API_ENDPOINTS.THEFT_DETECTION.BY_ID(id);
-    return await fetchWithErrorHandling(url);
-  }
-};
-
-// Vehicle History API calls
-export const vehicleHistoryAPI = {
-  // Get all vehicle history records
-  getAllVehicleHistory: async () => {
-    return await fetchWithErrorHandling(API_ENDPOINTS.VEHICLE_HISTORY.BASE);
-  },
-
-  // Get vehicle history record by ID
-  getVehicleHistoryById: async (id) => {
-    const url = API_ENDPOINTS.VEHICLE_HISTORY.BY_ID(id);
     return await fetchWithErrorHandling(url);
   }
 };

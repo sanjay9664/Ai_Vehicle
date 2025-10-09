@@ -13,7 +13,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 
 // Import API services
-import { vehicleHistoryAPI } from '../services/apiiiService';
+import { vehicleHistoryAPI } from '../services/VehicleInfoService';
 
 export default function VehicleHistoryUI() {
   const [vehicles, setVehicles] = useState([]);

@@ -9,7 +9,7 @@ import "leaflet-routing-machine";
 import { Modal, Button, Form, Card, Spinner, Row, Col } from "react-bootstrap";
 
 // Import API services
-import { vehiclesAPI, osmAPI, extractVehicleData, formatPredictionData } from '../services/apiService';
+import { vehiclesAPI, osmAPI, extractVehicleData, formatPredictionData } from '../services/Trip_DetailsService';
 
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -559,7 +559,7 @@ export default function EVRiderAssist() {
               </ul>
             )}
           </div>
-
+ 
           <div className="to-suggestions-container" style={{ position: "relative", marginBottom: "15px" }}>
             <input
               type="text"

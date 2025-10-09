@@ -390,9 +390,7 @@ const Dashboard = () => {
                       </td>
                       <td>{(d.totalWorkingHours || 0).toFixed(1)}h</td>
                       <td>{(d.averageWorkHours || 0).toFixed(1)}h</td>
-                      <td>
-                        {/* <Badge bg={status.variant}>{status.text}</Badge> */}
-                      </td>
+                      
                     </tr>
                   );
                 })}

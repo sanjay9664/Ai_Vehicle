@@ -4,7 +4,7 @@ import RiderDetails from './Component/RiderDetails';
 import VehicleInfo from './Component/VehicleInfo';
 import Theftdetection from './Component/TripsFare';
 import Individual_Dashboard from './Component/Individual_Dashboard';
-import Dashboard from './Component/Dashboard';
+import Dashboard from './Component/Trip_Details';
 import Aggregated from './Component/Aggregated';
 import './App.css';
 

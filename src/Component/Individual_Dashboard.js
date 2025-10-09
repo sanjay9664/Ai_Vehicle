@@ -15,7 +15,7 @@ import {
 } from "chart.js";
 
 // Import API services
-import { vehiclesAPI, odometerAPI } from '../services/apiServiceDetault';
+import { vehiclesAPI, odometerAPI } from '../services/Individual_DashboardService';
 
 ChartJS.register(
   CategoryScale,

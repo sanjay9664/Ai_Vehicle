@@ -3,7 +3,7 @@ const getApiBaseUrl = () => {
   // Check if we're in development mode and want to use local server
   if (process.env.NODE_ENV === 'development' && 
       process.env.REACT_APP_USE_LOCAL_SERVER === 'true') {
-    return process.env.REACT_APP_LOCAL_API_BASE_URL || 'http://192.168.68.133:8088';
+    return process.env.REACT_APP_LOCAL_API_BASE_URL || 'http://192.168.68.108:8088';
   }
   
   // Default to ngrok server
@@ -26,24 +26,6 @@ export const API_ENDPOINTS = {
   THEFT_DETECTION: {
     BASE: `${API_BASE_URL}/api/theftdetection`,
     BY_ID: (id) => `${API_BASE_URL}/api/theftdetection/${id}`
-  },
-  
-  // Vehicle History endpoints
-  VEHICLE_HISTORY: {
-    BASE: `${API_BASE_URL}/api/vehicleHistory`,
-    BY_ID: (id) => `${API_BASE_URL}/api/vehicleHistory/${id}`
-  },
-  
-  // Rider Score endpoints
-  RIDER_SCORE: {
-    BASE: `${API_BASE_URL}/api/riderScore`,
-    BY_ID: (id) => `${API_BASE_URL}/api/riderScore/${id}`
-  },
-  
-  // Odometer endpoints
-  ODOMETER: {
-    BASE: (strict, vehicleId) => 
-      `${API_BASE_URL}/api/iotdata/odometer/D?strict=${strict}&vehicleId=${vehicleId}`
   },
   
   // Default coordinates (Bangalore to Mumbai)

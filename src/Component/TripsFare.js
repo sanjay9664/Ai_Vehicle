@@ -14,7 +14,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 
 // Import API services
-import { theftDetectionAPI } from '../services/apiiService';
+import { theftDetectionAPI } from '../services/TripsFareService';
 
 export default function VehicleHistoryUI() {
   const [vehicles, setVehicles] = useState([]);

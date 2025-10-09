@@ -14,7 +14,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 
 // Import API services
-import { riderScoreAPI } from '../services/apiSService';
+import { riderScoreAPI } from '../services/RiderDetailsService';
 
 export default function RiderDetails() {
   const [riders, setRiders] = useState([]);
