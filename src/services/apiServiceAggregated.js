@@ -1,4 +1,3 @@
-
 // src/services/apiService.js
 
 import { API_ENDPOINTS, OSM_ENDPOINTS } from '../config/apiConfigAggregated';
@@ -54,16 +53,30 @@ export const dashboardAPI = {
     return await fetchWithErrorHandling(API_ENDPOINTS.DASHBOARD.DAILY_WORK_HOURS);
   },
 
+  // Get battery warranty data
+  getBatteryWarranty: async () => {
+    return await fetchWithErrorHandling(API_ENDPOINTS.DASHBOARD.BATTERY_WARRANTY);
+  },
+
+  // Get average odometer data
+  getAverageOdometer: async (strict = false) => {
+    return await fetchWithErrorHandling(API_ENDPOINTS.DASHBOARD.AVERAGE_ODOMETER(strict));
+  },
+
   // Get all dashboard data
   getAllDashboardData: async () => {
-    const [vehicleStats, dailyWorkHours] = await Promise.all([
+    const [vehicleStats, dailyWorkHours, batteryWarranty, averageOdometerNonStrict] = await Promise.all([
       dashboardAPI.getVehicleStats(),
-      dashboardAPI.getDailyWorkHours()
+      dashboardAPI.getDailyWorkHours(),
+      dashboardAPI.getBatteryWarranty(),
+      dashboardAPI.getAverageOdometer(false) // default to non-strict
     ]);
     
     return {
       vehicleStats,
-      dailyWorkHours
+      dailyWorkHours,
+      batteryWarranty,
+      averageOdometerNonStrict
     };
   }
 };

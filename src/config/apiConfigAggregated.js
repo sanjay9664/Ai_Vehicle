@@ -1,13 +1,11 @@
 // src/config/apiConfig.js
 
 const getApiBaseUrl = () => {
-  // Check if we're in development mode and want to use local server
   if (process.env.NODE_ENV === 'development' && 
       process.env.REACT_APP_USE_LOCAL_SERVER === 'true') {
-    return process.env.REACT_APP_LOCAL_API_BASE_URL || 'http://192.168.68.108:8088';
+    return process.env.REACT_APP_LOCAL_API_BASE_URL || 'http://192.168.68.121:8088';
   }
   
-  // Default to ngrok server
   return process.env.REACT_APP_NGROK_API_BASE_URL || 'https://nonteleological-brimfully-reid.ngrok-free.dev';
 };
 
@@ -16,7 +14,10 @@ export const API_ENDPOINTS = {
   // Dashboard endpoints
   DASHBOARD: {
     VEHICLE_STATS: `${API_BASE_URL}/api/dashboard/vehiclestats`,
-    DAILY_WORK_HOURS: `${API_BASE_URL}/api/dashboard/daily-work-hours`
+    DAILY_WORK_HOURS: `${API_BASE_URL}/api/dashboard/daily-work-hours`,
+    BATTERY_WARRANTY: `${API_BASE_URL}/api/dashboard/battery-warranty`,
+    AVERAGE_ODOMETER: (strict = false) => 
+      `${API_BASE_URL}/api/dashboard/average-odometer?strict=${strict}`
   },
   
   // Vehicles endpoints

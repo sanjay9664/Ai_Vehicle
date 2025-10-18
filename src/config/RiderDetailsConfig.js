@@ -4,7 +4,7 @@ const getApiBaseUrl = () => {
   // Check if we're in development mode and want to use local server
   if (process.env.NODE_ENV === 'development' && 
       process.env.REACT_APP_USE_LOCAL_SERVER === 'true') {
-    return process.env.REACT_APP_LOCAL_API_BASE_URL || 'http://192.168.68.108:8088';
+    return process.env.REACT_APP_LOCAL_API_BASE_URL || 'http://192.168.68.121:8088';
   }
   
   // Default to ngrok server
